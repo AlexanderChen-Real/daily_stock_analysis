@@ -516,8 +516,15 @@ class MarketAnalyzer:
             indices_text += f"- {idx.name}: {idx.current:.2f} ({direction}{abs(idx.change_pct):.2f}%)\n"
         
         # 板块信息
-        top_sectors_text = ", ".join([f"{s['name']}({s['change_pct']:+.2f}%)" for s in overview.top_sectors[:3]])
-        bottom_sectors_text = ", ".join([f"{s['name']}({s['change_pct']:+.2f}%)" for s in overview.bottom_sectors[:3]])
+        if overview.top_sectors:
+            top_sectors_text = ", ".join([f"{s['name']}({s['change_pct']:+.2f}%)" for s in overview.top_sectors[:3]])
+        else:
+            top_sectors_text = "无数据"
+            
+        if overview.bottom_sectors:
+            bottom_sectors_text = ", ".join([f"{s['name']}({s['change_pct']:+.2f}%)" for s in overview.bottom_sectors[:3]])
+        else:
+            bottom_sectors_text = "无数据"
         
         # 新闻信息 - 支持 SearchResult 对象或字典
         news_text = ""
@@ -531,13 +538,18 @@ class MarketAnalyzer:
                 snippet = n.get('snippet', '')[:100]
             news_text += f"{i}. {title}\n   {snippet}\n"
         
-        prompt = f"""你是一位专业的A股市场分析师，请根据以下数据生成一份简洁的大盘复盘报告。
+        # 判断市场类型
+        is_us = self._is_us_market()
+        market_name = "美股" if is_us else "A股"
+        
+        prompt = f"""你是一位通晓古今的资深金融分析师，请根据以下数据，用**文言文**（古文）撰写一份{market_name}大盘复盘报告。文风需简洁典雅，切中肯綮，言简意赅。
 
 【重要】输出要求：
+- **全文必须使用文言文撰写**
 - 必须输出纯 Markdown 文本格式
 - 禁止输出 JSON 格式
 - 禁止输出代码块
-- emoji 仅在标题处少量使用（每个标题最多1个）
+- **去掉"资金动向"相关分析**
 
 ---
 
@@ -552,8 +564,8 @@ class MarketAnalyzer:
 ## 市场概况
 - 上涨: {overview.up_count} 家 | 下跌: {overview.down_count} 家 | 平盘: {overview.flat_count} 家
 - 涨停: {overview.limit_up_count} 家 | 跌停: {overview.limit_down_count} 家
-- 两市成交额: {overview.total_amount:.0f} 亿元
-- 北向资金: {overview.north_flow:+.2f} 亿元
+- 两市成交额: {overview.total_amount:.0f} 亿元 (美股无此数据)
+- 北向资金: {overview.north_flow:+.2f} 亿元 (美股无此数据)
 
 ## 板块表现
 领涨: {top_sectors_text}
@@ -566,29 +578,26 @@ class MarketAnalyzer:
 
 # 输出格式模板（请严格按此格式输出）
 
-## 📊 {overview.date} 大盘复盘
+## 📊 {overview.date} {market_name}复盘（文言版）
 
-### 一、市场总结
-（2-3句话概括今日市场整体表现，包括指数涨跌、成交量变化）
+### 一、市况概览
+（以文言文概括今日市场整体表现，如"今日美股微澜，道指小挫..."）
 
-### 二、指数点评
-（分析上证、深证、创业板等各指数走势特点）
+### 二、指数评析
+（以文言文分析各指数走势特点）
 
-### 三、资金动向
-（解读成交额和北向资金流向的含义）
+### 三、板块异动
+（以文言文解读领涨领跌板块之因果）
 
-### 四、热点解读
-（分析领涨领跌板块背后的逻辑和驱动因素）
+### 四、后市展望
+（结合当前走势，以文言文预测后市机变）
 
-### 五、后市展望
-（结合当前走势和新闻，给出明日市场预判）
-
-### 六、风险提示
-（需要关注的风险点）
+### 五、风险警示
+（以文言文提示潜在风险）
 
 ---
 
-请直接输出复盘报告内容，不要输出其他说明文字。
+请直接输出文言文报告内容。
 """
         return prompt
     
