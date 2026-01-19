@@ -25,11 +25,11 @@ from .baostock_fetcher import BaostockFetcher
 from .yfinance_fetcher import YfinanceFetcher
 
 __all__ = [
+    'YfinanceFetcher',
     'BaseFetcher',
     'DataFetcherManager',
     'EfinanceFetcher',
     'AkshareFetcher',
     'TushareFetcher',
     'BaostockFetcher',
-    'YfinanceFetcher',
 ]
